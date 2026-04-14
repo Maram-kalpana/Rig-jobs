@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useApp } from "../context/AppContext";
 import { BrandHeader } from "../components/BrandHeader";
 import { SideDrawer } from "../components/SideDrawer";
@@ -15,22 +15,42 @@ import { SettingsScreen } from "../screens/SettingsScreen";
 import { JobDetailsScreen } from "../screens/JobDetailsScreen";
 
 export function RootNavigator() {
+  const { width } = useWindowDimensions();
   const { currentUser, jobs, savedJobs, applications, profile, setProfile, logout, toggleSaveJob, applyForJob, isApplied, isSaved } = useApp();
   const [authRoute, setAuthRoute] = useState("register");
-  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [route, setRoute] = useState("jobs");
   const [selectedJob, setSelectedJob] = useState(null);
+  const [detailsFrom, setDetailsFrom] = useState("jobs");
+
+  const drawerWidth = Math.min(width * 0.78, 320);
+
+  const openJobDetails = useCallback((job, fromRoute) => {
+    setSelectedJob(job);
+    setDetailsFrom(fromRoute);
+    setRoute("details");
+    setDrawerOpen(false);
+  }, []);
+
+  const handleDrawerNavigate = useCallback((next) => {
+    setRoute(next);
+    setSelectedJob(null);
+    setDrawerOpen(false);
+  }, []);
 
   const content = useMemo(() => {
-    if (route === "details") {
+    if (route === "details" && selectedJob) {
       return (
         <JobDetailsScreen
           job={selectedJob}
-          onBack={() => setRoute("jobs")}
+          onBack={() => {
+            setRoute(detailsFrom);
+            setSelectedJob(null);
+          }}
           onApply={applyForJob}
           onSave={toggleSaveJob}
-          applied={selectedJob ? isApplied(selectedJob.id) : false}
-          saved={selectedJob ? isSaved(selectedJob.id) : false}
+          applied={isApplied(selectedJob.id)}
+          saved={isSaved(selectedJob.id)}
         />
       );
     }
@@ -38,10 +58,10 @@ export function RootNavigator() {
       return <DashboardScreen stats={{ applications: applications.length, saved: savedJobs.length }} onBrowseJobs={() => setRoute("jobs")} />;
     }
     if (route === "applications") {
-      return <ApplicationsScreen applications={applications} onOpenJob={(job) => { setSelectedJob(job); setRoute("details"); }} />;
+      return <ApplicationsScreen applications={applications} onOpenJob={(job) => openJobDetails(job, "applications")} />;
     }
     if (route === "saved") {
-      return <SavedJobsScreen jobs={savedJobs} onOpenJob={(job) => { setSelectedJob(job); setRoute("details"); }} onToggleSave={toggleSaveJob} />;
+      return <SavedJobsScreen jobs={savedJobs} onOpenJob={(job) => openJobDetails(job, "saved")} onToggleSave={toggleSaveJob} />;
     }
     if (route === "profile") {
       return <ProfileScreen profile={profile} setProfile={setProfile} />;
@@ -49,8 +69,31 @@ export function RootNavigator() {
     if (route === "settings") {
       return <SettingsScreen />;
     }
-    return <JobsScreen jobs={jobs} onOpenJob={(job) => { setSelectedJob(job); setRoute("details"); }} onApply={applyForJob} onSave={toggleSaveJob} isApplied={isApplied} isSaved={isSaved} />;
-  }, [route, selectedJob, applyForJob, toggleSaveJob, isApplied, isSaved, applications.length, savedJobs.length, applications, savedJobs, profile, setProfile, jobs]);
+    return (
+      <JobsScreen
+        jobs={jobs}
+        onOpenJob={(job) => openJobDetails(job, "jobs")}
+        onApply={applyForJob}
+        onSave={toggleSaveJob}
+        isApplied={isApplied}
+        isSaved={isSaved}
+      />
+    );
+  }, [
+    route,
+    selectedJob,
+    detailsFrom,
+    openJobDetails,
+    applyForJob,
+    toggleSaveJob,
+    isApplied,
+    isSaved,
+    applications,
+    savedJobs,
+    profile,
+    setProfile,
+    jobs,
+  ]);
 
   if (!currentUser) {
     if (authRoute === "register") return <RegisterScreen onNavigateLogin={() => setAuthRoute("login")} />;
@@ -58,7 +101,7 @@ export function RootNavigator() {
       <LoginScreen
         onLoginSuccess={() => {
           setRoute("dashboard");
-          setDrawerOpen(true);
+          setDrawerOpen(false);
           setSelectedJob(null);
         }}
         onNavigateRegister={() => setAuthRoute("register")}
@@ -66,25 +109,31 @@ export function RootNavigator() {
     );
   }
 
+  const drawerActiveKey = route === "details" ? detailsFrom : route;
+
   return (
     <View style={styles.page}>
       <BrandHeader onMenu={() => setDrawerOpen((v) => !v)} />
       <View style={styles.body}>
-        <SideDrawer
-          visible={drawerOpen}
-          activeKey={route}
-          onNavigate={(next) => setRoute(next)}
-          onLogout={() => {
-            logout();
-            setAuthRoute("login");
-            setRoute("jobs");
-            setSelectedJob(null);
-            setDrawerOpen(false);
-          }}
-        />
-        <ScrollView style={styles.content} contentContainerStyle={{ padding: 12, paddingBottom: 24 }}>
-          {content}
-        </ScrollView>
+        <View style={styles.main}>{content}</View>
+        {drawerOpen ? (
+          <>
+            <Pressable style={styles.backdrop} onPress={() => setDrawerOpen(false)} accessibilityRole="button" accessibilityLabel="Close menu" />
+            <View style={[styles.drawerHost, { width: drawerWidth }]} pointerEvents="box-none">
+              <SideDrawer
+                activeKey={drawerActiveKey}
+                onNavigate={handleDrawerNavigate}
+                onLogout={() => {
+                  logout();
+                  setAuthRoute("login");
+                  setRoute("jobs");
+                  setSelectedJob(null);
+                  setDrawerOpen(false);
+                }}
+              />
+            </View>
+          </>
+        ) : null}
       </View>
     </View>
   );
@@ -92,6 +141,18 @@ export function RootNavigator() {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.pageBg },
-  body: { flex: 1, flexDirection: "row" },
-  content: { flex: 1 },
+  body: { flex: 1, minWidth: 0, position: "relative" },
+  main: { flex: 1, minWidth: 0 },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(15, 37, 71, 0.38)",
+    zIndex: 10,
+  },
+  drawerHost: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: 11,
+  },
 });
