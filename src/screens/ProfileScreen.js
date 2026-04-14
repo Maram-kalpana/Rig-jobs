@@ -8,15 +8,22 @@ export function ProfileScreen({ profile, setProfile }) {
   const update = (key, value) => setProfile((old) => ({ ...old, [key]: value }));
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+    >
       <Text style={styles.title}>My Profile</Text>
       <Text style={styles.subtitle}>Keep your details current for recruiters</Text>
       <View style={styles.card}>
-        <InputField label="Full Name" value={profile.fullName} onChangeText={(v) => update("fullName", v)} />
-        <InputField label="Job Title" value={profile.jobTitle} onChangeText={(v) => update("jobTitle", v)} />
-        <InputField label="Email Address" value={profile.email} onChangeText={(v) => update("email", v)} />
-        <InputField label="Phone Number" value={profile.phone} onChangeText={(v) => update("phone", v)} />
-        <InputField label="Location" value={profile.location} onChangeText={(v) => update("location", v)} />
+        <Text style={styles.sectionLabel}>Personal Information</Text>
+        <InputField icon="person" label="Full Name" value={profile.fullName} onChangeText={(v) => update("fullName", v)} />
+        <InputField icon="work" label="Job Title" value={profile.jobTitle} onChangeText={(v) => update("jobTitle", v)} />
+        <InputField icon="email" label="Email Address" value={profile.email} onChangeText={(v) => update("email", v)} />
+        <InputField icon="phone" label="Phone Number" value={profile.phone} onChangeText={(v) => update("phone", v)} />
+        <InputField icon="place" label="Location" value={profile.location} onChangeText={(v) => update("location", v)} />
         <View style={styles.toggleRow}>
           <View style={styles.toggleCopy}>
             <Text style={styles.toggleTitle}>Open to Work</Text>
@@ -35,6 +42,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 32 },
   title: { color: colors.textPrimary, fontSize: 26, fontWeight: "800" },
   subtitle: { color: colors.textSecondary, fontSize: 15, marginTop: 6, marginBottom: 18 },
+  sectionLabel: { color: colors.textPrimary, fontSize: 18, fontWeight: "800", marginBottom: 14 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 22,

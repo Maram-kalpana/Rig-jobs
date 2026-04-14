@@ -1,42 +1,49 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme";
 
 const menu = [
-  { key: "jobs", label: "Browse Jobs", icon: "JB" },
-  { key: "applications", label: "My Applications", icon: "AP" },
-  { key: "saved", label: "Saved Jobs", icon: "SV" },
-  { key: "profile", label: "My Profile", icon: "PR" },
-  { key: "settings", label: "Settings", icon: "ST" },
+  { key: "jobs", label: "Browse Jobs", icon: "work" },
+  { key: "applications", label: "My Applications", icon: "description" },
+  { key: "saved", label: "Saved Jobs", icon: "bookmark" },
+  { key: "profile", label: "My Profile", icon: "person" },
+  { key: "settings", label: "Settings", icon: "settings" },
 ];
 
-export function SideDrawer({ activeKey, onNavigate, onLogout }) {
+export function SideDrawer({ activeKey, onNavigate, onLogout, onPressHome }) {
   return (
     <View style={styles.shell}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.brandRow}>
+        <Pressable
+          style={styles.brandRow}
+          onPress={onPressHome}
+          disabled={!onPressHome}
+          accessibilityRole={onPressHome ? "button" : undefined}
+          accessibilityLabel={onPressHome ? "Go to home" : undefined}
+        >
           <View style={styles.logo}>
-            <Text style={styles.logoTxt}>RW</Text>
+            <MaterialIcons name="home" size={22} color="#FFFFFF" />
           </View>
           <Text style={styles.brand}>RigWorldJobs</Text>
-        </View>
+        </Pressable>
         <View style={styles.divider} />
-        {menu.map((item) => (
-          <Pressable
-            key={item.key}
-            style={[styles.item, activeKey === item.key && styles.active]}
-            onPress={() => onNavigate(item.key)}
-          >
-            <View style={[styles.iconPill, activeKey === item.key && styles.iconPillActive]}>
-              <Text style={[styles.icon, activeKey === item.key && styles.iconActive]}>{item.icon}</Text>
-            </View>
-            <Text style={[styles.text, activeKey === item.key && styles.activeText]}>{item.label}</Text>
-          </Pressable>
-        ))}
+        {menu.map((item) => {
+          const active = activeKey === item.key;
+          return (
+            <Pressable key={item.key} style={[styles.item, active && styles.active]} onPress={() => onNavigate(item.key)}>
+              <View style={[styles.iconPill, active && styles.iconPillActive]}>
+                <MaterialIcons name={item.icon} size={22} color={active ? "#1E4CB6" : colors.textSecondary} />
+              </View>
+              <Text style={[styles.text, active && styles.activeText]}>{item.label}</Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
       <View style={styles.footer}>
         <View style={styles.divider} />
         <Pressable style={styles.logout} onPress={onLogout}>
+          <MaterialIcons name="exit-to-app" size={20} color="#1E4CB6" style={styles.logoutIcon} />
           <Text style={styles.logoutText}>Logout</Text>
         </Pressable>
       </View>
@@ -63,12 +70,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#157DB6",
+    backgroundColor: "#0A3D6B",
     alignItems: "center",
     justifyContent: "center",
   },
-  logoTxt: { color: "#FFF", fontWeight: "800", fontSize: 14 },
-  brand: { color: colors.textPrimary, fontWeight: "800", fontSize: 17 },
+  brand: { color: colors.textPrimary, fontWeight: "800", fontSize: 17, flex: 1 },
   divider: { height: 1, backgroundColor: colors.border, marginHorizontal: 16 },
   item: {
     flexDirection: "row",
@@ -90,12 +96,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconPillActive: { backgroundColor: "#D8E4FA" },
-  icon: { fontSize: 13, fontWeight: "800", color: colors.textSecondary },
-  iconActive: { color: "#1E4CB6" },
   text: { flex: 1, color: colors.textSecondary, fontSize: 16, fontWeight: "600" },
   activeText: { color: "#1E4CB6", fontWeight: "700" },
   footer: { paddingBottom: 20, paddingTop: 8 },
   logout: {
+    flexDirection: "row",
     marginHorizontal: 16,
     marginTop: 12,
     borderWidth: 1,
@@ -103,7 +108,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.surface,
+    gap: 8,
   },
+  logoutIcon: { marginRight: 0 },
   logoutText: { color: "#1E4CB6", fontWeight: "700", fontSize: 16 },
 });

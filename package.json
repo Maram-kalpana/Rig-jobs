@@ -10,9 +10,11 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/vector-icons": "^14.0.0",
     "expo": "latest",
     "expo-status-bar": "latest",
     "react": "latest",
-    "react-native": "latest"
+    "react-native": "latest",
+    "react-native-safe-area-context": "4.12.0"
   }
 }

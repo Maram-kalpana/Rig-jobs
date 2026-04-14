@@ -4,7 +4,13 @@ import { colors } from "../theme";
 
 export function ApplicationsScreen({ applications, onOpenJob }) {
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+    >
       <Text style={styles.title}>My Applications</Text>
       <Text style={styles.subtitle}>Track roles you have applied to</Text>
       {applications.length === 0 ? (

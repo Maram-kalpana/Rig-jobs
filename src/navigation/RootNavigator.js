@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useApp } from "../context/AppContext";
 import { BrandHeader } from "../components/BrandHeader";
 import { SideDrawer } from "../components/SideDrawer";
@@ -24,6 +25,12 @@ export function RootNavigator() {
   const [detailsFrom, setDetailsFrom] = useState("jobs");
 
   const drawerWidth = Math.min(width * 0.78, 320);
+
+  const goHome = useCallback(() => {
+    setRoute("dashboard");
+    setSelectedJob(null);
+    setDrawerOpen(false);
+  }, []);
 
   const openJobDetails = useCallback((job, fromRoute) => {
     setSelectedJob(job);
@@ -67,7 +74,7 @@ export function RootNavigator() {
       return <ProfileScreen profile={profile} setProfile={setProfile} />;
     }
     if (route === "settings") {
-      return <SettingsScreen />;
+      return <SettingsScreen onBrowseJobs={() => setRoute("jobs")} />;
     }
     return (
       <JobsScreen
@@ -112,10 +119,12 @@ export function RootNavigator() {
   const drawerActiveKey = route === "details" ? detailsFrom : route;
 
   return (
-    <View style={styles.page}>
-      <BrandHeader onMenu={() => setDrawerOpen((v) => !v)} />
-      <View style={styles.body}>
-        <View style={styles.main}>{content}</View>
+    <SafeAreaView style={[styles.page, { backgroundColor: colors.pageBg }]} edges={["top", "left", "right", "bottom"]}>
+      <BrandHeader onMenu={() => setDrawerOpen((v) => !v)} onPressHome={goHome} />
+      <View style={styles.shell}>
+        <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <View style={styles.main}>{content}</View>
+        </KeyboardAvoidingView>
         {drawerOpen ? (
           <>
             <Pressable style={styles.backdrop} onPress={() => setDrawerOpen(false)} accessibilityRole="button" accessibilityLabel="Close menu" />
@@ -123,6 +132,7 @@ export function RootNavigator() {
               <SideDrawer
                 activeKey={drawerActiveKey}
                 onNavigate={handleDrawerNavigate}
+                onPressHome={goHome}
                 onLogout={() => {
                   logout();
                   setAuthRoute("login");
@@ -135,13 +145,14 @@ export function RootNavigator() {
           </>
         ) : null}
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.pageBg },
-  body: { flex: 1, minWidth: 0, position: "relative" },
+  page: { flex: 1 },
+  shell: { flex: 1, minWidth: 0, position: "relative" },
+  keyboard: { flex: 1, minWidth: 0 },
   main: { flex: 1, minWidth: 0 },
   backdrop: {
     ...StyleSheet.absoluteFillObject,

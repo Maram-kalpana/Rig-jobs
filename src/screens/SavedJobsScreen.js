@@ -4,7 +4,13 @@ import { colors } from "../theme";
 
 export function SavedJobsScreen({ jobs, onOpenJob, onToggleSave }) {
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+    >
       <Text style={styles.title}>Saved Jobs</Text>
       <Text style={styles.subtitle}>Roles you bookmarked for later</Text>
       {jobs.length === 0 ? (

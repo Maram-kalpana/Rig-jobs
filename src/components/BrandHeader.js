@@ -1,34 +1,31 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme";
 
-function Hamburger() {
-  return (
-    <View style={styles.burger}>
-      <View style={styles.burgerLine} />
-      <View style={styles.burgerLine} />
-      <View style={styles.burgerLine} />
-    </View>
-  );
-}
-
-export function BrandHeader({ onMenu }) {
+export function BrandHeader({ onMenu, onPressHome }) {
   const brand = (
-    <View style={styles.brandCluster}>
+    <Pressable
+      onPress={onPressHome}
+      disabled={!onPressHome}
+      style={({ pressed }) => [styles.brandCluster, onPressHome && pressed && styles.brandPressed]}
+      accessibilityRole={onPressHome ? "button" : undefined}
+      accessibilityLabel={onPressHome ? "Go to home" : undefined}
+    >
       <View style={styles.logo}>
-        <Text style={styles.logoTxt}>RW</Text>
+        <MaterialIcons name="home" size={22} color="#FFFFFF" />
       </View>
       <Text style={styles.brand} numberOfLines={1}>
         RigWorldJobs
       </Text>
-    </View>
+    </Pressable>
   );
 
   if (onMenu) {
     return (
       <View style={styles.top}>
-        <Pressable onPress={onMenu} style={styles.menuHit} hitSlop={10} accessibilityRole="button" accessibilityLabel="Menu">
-          <Hamburger />
+        <Pressable onPress={onMenu} style={styles.menuHit} hitSlop={10} accessibilityRole="button" accessibilityLabel="Open menu">
+          <MaterialIcons name="menu" size={28} color="#344C71" />
         </Pressable>
         {brand}
       </View>
@@ -55,18 +52,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   brandCluster: { flexDirection: "row", alignItems: "center", gap: 10 },
+  brandPressed: { opacity: 0.75 },
   logo: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: "#157DB6",
+    backgroundColor: "#0A3D6B",
     alignItems: "center",
     justifyContent: "center",
   },
-  logoTxt: { color: "#FFF", fontWeight: "800", fontSize: 14 },
   brand: { color: colors.textPrimary, fontWeight: "800", fontSize: 17, maxWidth: 220 },
   menuHit: { padding: 8, marginLeft: -4 },
   menuPlaceholder: { width: 44 },
-  burger: { justifyContent: "space-between", height: 16, width: 22 },
-  burgerLine: { height: 2, borderRadius: 1, backgroundColor: "#344C71", width: "100%" },
 });

@@ -21,6 +21,8 @@ export function JobsScreen({ jobs, onOpenJob, onApply, onSave, isApplied, isSave
       contentContainerStyle={[styles.listContent, { paddingHorizontal: horizontalPad }]}
       columnWrapperStyle={numCols === 2 ? [styles.rowWrap, { marginBottom: gap }] : undefined}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
       ListHeaderComponent={
         <View style={styles.header}>
           <Text style={styles.title}>Browse Jobs</Text>

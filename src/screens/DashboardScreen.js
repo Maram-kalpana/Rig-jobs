@@ -1,3 +1,4 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { colors } from "../theme";
@@ -12,8 +13,9 @@ export function DashboardScreen({ stats, onBrowseJobs }) {
   ];
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <Pressable style={styles.browse} onPress={onBrowseJobs}>
+        <MaterialIcons name="work" size={20} color="#FFFFFF" />
         <Text style={styles.browseText}>Browse Jobs</Text>
       </Pressable>
       <Text style={styles.sectionTitle}>Overview</Text>
@@ -39,6 +41,9 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, minWidth: 0 },
   content: { padding: 16, paddingBottom: 32 },
   browse: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
     alignSelf: "flex-end",
     backgroundColor: colors.primary,
     borderRadius: 18,

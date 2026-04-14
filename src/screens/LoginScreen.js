@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { BrandHeader } from "../components/BrandHeader";
 import { InputField } from "../components/InputField";
 import { PrimaryButton } from "../components/PrimaryButton";
+import { ScreenSafeView } from "../components/ScreenSafeView";
 import { useApp } from "../context/AppContext";
 import { colors } from "../theme";
 
@@ -19,23 +20,29 @@ export function LoginScreen({ onLoginSuccess, onNavigateRegister }) {
   };
 
   return (
-    <ScrollView style={styles.page}>
-      <BrandHeader />
-      <View style={styles.card}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.sub}>Sign in to your candidate account to continue</Text>
-        <InputField label="Email Address" placeholder="you@example.com" value={email} onChangeText={setEmail} />
-        <InputField label="Password" placeholder="Enter your password" value={password} onChangeText={setPassword} secureTextEntry />
-        {!!message && <Text style={styles.message}>{message}</Text>}
-        <PrimaryButton label="Sign In" onPress={submit} />
-        <Text style={styles.switchText}>Don't have an account? <Text style={styles.link} onPress={onNavigateRegister}>Create Account</Text></Text>
-      </View>
-    </ScrollView>
+    <ScreenSafeView style={styles.safe}>
+      <ScrollView style={styles.page} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <BrandHeader />
+        <View style={styles.card}>
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.sub}>Sign in to your candidate account to continue</Text>
+          <InputField label="Email Address" placeholder="you@example.com" value={email} onChangeText={setEmail} />
+          <InputField label="Password" placeholder="Enter your password" value={password} onChangeText={setPassword} secureTextEntry />
+          {!!message && <Text style={styles.message}>{message}</Text>}
+          <PrimaryButton label="Sign In" onPress={submit} />
+          <Text style={styles.switchText}>
+            Don't have an account? <Text style={styles.link} onPress={onNavigateRegister}>Create Account</Text>
+          </Text>
+        </View>
+      </ScrollView>
+    </ScreenSafeView>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.pageBg },
+  safe: { flex: 1, backgroundColor: colors.pageBg },
+  page: { flex: 1 },
+  scrollContent: { paddingBottom: 32 },
   card: { margin: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel, padding: 14 },
   title: { color: colors.textPrimary, fontSize: 42 / 2, fontWeight: "800" },
   sub: { color: colors.textSecondary, fontSize: 17, marginVertical: 12 },

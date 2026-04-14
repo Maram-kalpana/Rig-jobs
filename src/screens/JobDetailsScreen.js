@@ -7,7 +7,13 @@ export function JobDetailsScreen({ job, onBack, onApply, onSave, applied, saved 
   if (!job) return null;
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+    >
       <Pressable onPress={onBack} hitSlop={8}>
         <Text style={styles.back}>Back</Text>
       </Pressable>
