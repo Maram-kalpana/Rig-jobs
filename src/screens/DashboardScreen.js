@@ -1,89 +1,82 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme";
 
-export function DashboardScreen({ stats, onBrowseJobs }) {
-  const { width } = useWindowDimensions();
-  const narrow = width < 420;
+export function DashboardScreen({ stats }) {
   const cards = [
-    { key: "applications", label: "Applications", value: String(stats.applications), color: "#E9F0FF", accent: "#1E4CB6" },
-    { key: "saved", label: "Saved Jobs", value: String(stats.saved), color: "#FFF8E3", accent: "#C9A227" },
-    { key: "views", label: "Profile Views", value: "128", color: "#EAF9F1", accent: "#0F8E5E" },
+    { label: "Applications", value: stats.applications },
+    { label: "Saved Jobs", value: stats.saved },
+    { label: "Profile Views", value: 120 },
   ];
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-      <Pressable style={styles.browse} onPress={onBrowseJobs}>
-        <MaterialIcons name="work" size={20} color="#FFFFFF" />
-        <Text style={styles.browseText}>Browse Jobs</Text>
-      </Pressable>
-      <Text style={styles.sectionTitle}>Overview</Text>
-      <View style={[styles.grid, narrow && styles.gridOneCol]}>
-        {cards.map((c) => (
-          <View key={c.key} style={[styles.card, narrow ? { width: "100%" } : { width: "48%" }]}>
-            <View style={styles.cardTop}>
-              <View style={[styles.dot, { backgroundColor: c.color }]}>
-                <View style={[styles.dotInner, { backgroundColor: c.accent }]} />
-              </View>
-              <Text style={styles.badge}>Up to date</Text>
-            </View>
+    <ScrollView style={styles.container}>
+      {/* 🔹 CARDS */}
+      <View style={styles.cardRow}>
+        {cards.map((c, i) => (
+          <View key={i} style={styles.card}>
             <Text style={styles.value}>{c.value}</Text>
             <Text style={styles.label}>{c.label}</Text>
+            <Text style={styles.status}>Up to date</Text>
           </View>
         ))}
+      </View>
+
+      {/* 🔹 RECENT APPLICATIONS */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Recent Applications</Text>
+        <Text style={styles.empty}>No applications yet.</Text>
+      </View>
+
+      {/* 🔹 SAVED JOBS */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Saved Jobs</Text>
+        <Text style={styles.empty}>No saved jobs yet.</Text>
+      </View>
+
+      {/* 🔹 NOTIFICATIONS */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Notifications</Text>
+        <Text style={styles.item}>Interview scheduled...</Text>
+        <Text style={styles.item}>Application under review</Text>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1, minWidth: 0 },
-  content: { padding: 16, paddingBottom: 32 },
-  browse: {
+  container: { padding: 16 },
+
+  cardRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    alignSelf: "flex-end",
-    backgroundColor: colors.primary,
-    borderRadius: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    shadowColor: "#1E4CB6",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    justifyContent: "space-between",
   },
-  browseText: { color: "#FFF", fontWeight: "700", fontSize: 16 },
-  sectionTitle: { color: colors.textPrimary, fontSize: 22, fontWeight: "800", marginBottom: 14 },
-  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 12 },
-  gridOneCol: { flexDirection: "column" },
+
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: colors.border,
+    width: "30%",
+    backgroundColor: "#fff",
     padding: 16,
-    minHeight: 140,
-    marginBottom: 4,
-    shadowColor: "#0F2545",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#eee",
   },
-  cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  dot: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
+
+  value: { fontSize: 22, fontWeight: "800" },
+  label: { color: "#666", marginTop: 4 },
+  status: { color: "green", fontSize: 12, marginTop: 6 },
+
+  section: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: "#fff",
+    borderRadius: 16,
   },
-  dotInner: { width: 12, height: 12, borderRadius: 6 },
-  badge: { color: "#0F8E5E", fontSize: 12, fontWeight: "700" },
-  value: { color: colors.textPrimary, fontSize: 32, fontWeight: "800" },
-  label: { color: colors.textSecondary, fontSize: 16, marginTop: 4 },
+
+  sectionTitle: {
+    fontWeight: "700",
+    marginBottom: 10,
+  },
+
+  empty: { color: "#888" },
+  item: { marginBottom: 6 },
 });
