@@ -1,21 +1,68 @@
-import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View, TextInput } from "react-native";
 import { colors } from "../theme";
 
 export function ApplicationsScreen({ applications, onOpenJob }) {
+  const [activeTab, setActiveTab] = useState("All");
+
+  const stats = [
+    { label: "Total Applied", value: applications.length },
+    { label: "Active", value: 0 },
+    { label: "Interviews", value: 0 },
+    { label: "Shortlisted", value: 0 },
+  ];
+
+  const tabs = [
+    "All",
+    "Interview Scheduled",
+    "Shortlisted",
+    "Under Review",
+    "Application Sent",
+    "Rejected",
+  ];
+
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="on-drag"
-    >
-      <Text style={styles.title}>My Applications</Text>
-      <Text style={styles.subtitle}>Track roles you have applied to</Text>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+      
+      {/* 🔹 STATS */}
+      <View style={styles.statsRow}>
+        {stats.map((item, i) => (
+          <View key={i} style={styles.statCard}>
+            <Text style={styles.statValue}>{item.value}</Text>
+            <Text style={styles.statLabel}>{item.label}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* 🔹 SEARCH */}
+      <View style={styles.searchBox}>
+        <TextInput
+          placeholder="Search applications..."
+          placeholderTextColor="#94A3B8"
+          style={styles.searchInput}
+        />
+      </View>
+
+      {/* 🔹 FILTER TABS */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsRow}>
+        {tabs.map((tab) => (
+          <Pressable
+            key={tab}
+            onPress={() => setActiveTab(tab)}
+            style={[styles.tab, activeTab === tab && styles.activeTab]}
+          >
+            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+              {tab} (0)
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      {/* 🔹 CONTENT */}
       {applications.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>No applications yet. Browse jobs and tap Apply.</Text>
+        <View style={styles.emptyBox}>
+          <Text style={styles.emptyTitle}>No applications found</Text>
+          <Text style={styles.emptySub}>Try a different filter or search term</Text>
         </View>
       ) : (
         applications.map((job) => (
@@ -26,9 +73,8 @@ export function ApplicationsScreen({ applications, onOpenJob }) {
             <View style={styles.cardBody}>
               <Text style={styles.jobTitle}>{job.title}</Text>
               <Text style={styles.meta}>
-                {job.company} | {job.location}
+                {job.company} • {job.location}
               </Text>
-              <Text style={styles.link}>View details</Text>
             </View>
           </Pressable>
         ))
@@ -36,46 +82,87 @@ export function ApplicationsScreen({ applications, onOpenJob }) {
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
-  scroll: { flex: 1, minWidth: 0 },
-  content: { padding: 16, paddingBottom: 32 },
-  title: { color: colors.textPrimary, fontSize: 26, fontWeight: "800" },
-  subtitle: { color: colors.textSecondary, fontSize: 15, marginTop: 6, marginBottom: 18 },
-  empty: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 20,
-  },
-  emptyText: { color: colors.textSecondary, fontSize: 16, lineHeight: 24 },
-  card: {
+  scroll: { flex: 1, backgroundColor: "#F5F7FB" },
+  content: { padding: 16 },
+
+  /* STATS */
+  statsRow: {
     flexDirection: "row",
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 14,
-    marginBottom: 12,
-    shadowColor: "#0F2545",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    justifyContent: "space-between",
+    marginBottom: 16,
   },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
+  statCard: {
+    flex: 1,
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 14,
+    marginHorizontal: 4,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  statValue: { fontSize: 20, fontWeight: "800", color: "#1E293B" },
+  statLabel: { fontSize: 12, color: "#64748B", marginTop: 4 },
+
+  /* SEARCH */
+  searchBox: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginBottom: 12,
+  },
+  searchInput: { height: 44, fontSize: 14 },
+
+  /* TABS */
+  tabsRow: { marginBottom: 16 },
+  tab: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#E2E8F0",
+    marginRight: 8,
+  },
+  activeTab: {
+    backgroundColor: "#2563EB",
+  },
+  tabText: { fontSize: 13, color: "#475569" },
+  activeTabText: { color: "#fff" },
+
+  /* EMPTY */
+  emptyBox: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 40,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
-  avatarTxt: { color: "#FFF", fontSize: 20, fontWeight: "800" },
-  cardBody: { flex: 1, minWidth: 0 },
-  jobTitle: { color: colors.textPrimary, fontWeight: "800", fontSize: 17 },
-  meta: { color: colors.textSecondary, fontSize: 14, marginTop: 4 },
-  link: { color: colors.primaryDark, fontWeight: "700", marginTop: 8, fontSize: 15 },
+  emptyTitle: { fontSize: 16, fontWeight: "700", color: "#1E293B" },
+  emptySub: { fontSize: 14, color: "#64748B", marginTop: 6 },
+
+  /* JOB CARD */
+  card: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 10,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#2563EB",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  avatarTxt: { color: "#fff", fontWeight: "800" },
+  cardBody: { flex: 1 },
+  jobTitle: { fontWeight: "700", fontSize: 15, color: "#1E293B" },
+  meta: { color: "#64748B", marginTop: 4 },
 });

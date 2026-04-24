@@ -77,7 +77,13 @@ export function RootNavigator() {
             setRoute(detailsFrom);
             setSelectedJob(null);
           }}
-          onApply={applyForJob}
+          onApply={(job) => {
+  console.log("APPLY CLICKED"); // debug
+
+  setSelectedJob(job);
+  setDetailsFrom("saved"); // 🔥 VERY IMPORTANT
+  setRoute("details");
+}}
           onSave={toggleSaveJob}
           applied={isApplied(selectedJob.id)}
           saved={isSaved(selectedJob.id)}
@@ -109,16 +115,20 @@ export function RootNavigator() {
     }
 
     if (route === "saved") {
-      return (
-        <SavedJobsScreen
-          jobs={savedJobs}
-          onOpenJob={(job) =>
-            openJobDetails(job, "saved")
-          }
-          onToggleSave={toggleSaveJob}
-        />
-      );
-    }
+  return (
+    <SavedJobsScreen
+      jobs={savedJobs}
+      onOpenJob={(job) =>
+        openJobDetails(job, "saved")
+      }
+      onToggleSave={toggleSaveJob}
+      onApply={(job) => {
+        setSelectedJob(job);
+        setRoute("details"); // 👈 reuse JobDetailsScreen
+      }}
+    />
+  );
+}
 
     if (route === "profile") {
       return (
@@ -215,7 +225,7 @@ export function RootNavigator() {
             Platform.OS === "ios" ? "padding" : undefined
           }
         >
-        <View style={styles.main}>{content}</View>
+        <View style={{ flex: 1 }}>{content}</View>
 
 {/* 🔥 BOTTOM TAB */}
 <BottomTabBar
@@ -275,7 +285,7 @@ const styles = StyleSheet.create({
   keyboard: { flex: 1 },
   main: {
   flex: 1,
-  paddingBottom: 70, // 👈 prevents overlap
+   // 👈 prevents overlap
 },
 
   backdrop: {

@@ -5,6 +5,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 const tabs = [
   { key: "dashboard", label: "Home", icon: "home" },
   { key: "jobs", label: "Apply", icon: "send" },
+  { key: "applications", label: "N Vites", icon: "mail-outline" },
   { key: "profile", label: "Profile", icon: "person-outline" },
 ];
 
@@ -37,14 +38,20 @@ export function BottomTabBar({ active, onChange }) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    height: 64,
-    borderTopWidth: 1,
-    borderColor: "#eee",
-    backgroundColor: "#fff",
-    justifyContent: "space-around",
-    alignItems: "center",
-  },
+    flex:1,
+  flexDirection: "row",
+  height: 64,
+  position: "absolute",   // ✅ ADD
+  bottom: 0,              // ✅ ADD
+  left: 0,                // ✅ ADD
+  right: 0,               // ✅ ADD
+  borderTopWidth: 1,
+  borderColor: "#eee",
+  backgroundColor: "#F1F5F9",
+  justifyContent: "space-around",
+  alignItems: "center",
+  paddingHorizontal: 12
+},
 
   tab: {
     alignItems: "center",
