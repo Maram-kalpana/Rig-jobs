@@ -99,6 +99,16 @@ export function RootNavigator() {
             saved: savedJobs.length,
           }}
           onBrowseJobs={() => setRoute("jobs")}
+          onPressRecentApplications={() => {
+            setRoute("applications");
+            setSelectedJob(null);
+            setDrawerOpen(false);
+          }}
+          onPressSavedJobs={() => {
+            setRoute("saved");
+            setSelectedJob(null);
+            setDrawerOpen(false);
+          }}
         />
       );
     }
@@ -215,7 +225,11 @@ export function RootNavigator() {
         {/* HEADER */}
         <BrandHeader
           onMenu={() => setDrawerOpen((v) => !v)}
-          onPressHome={goHome}
+          onPressBrowseJobs={() => {
+            setRoute("jobs");
+            setSelectedJob(null);
+            setDrawerOpen(false);
+          }}
         />
 
         {/* CONTENT */}
@@ -303,4 +317,4 @@ const styles = StyleSheet.create({
     elevation: 20,
     backgroundColor: "#fff",
   },
-});0
+});

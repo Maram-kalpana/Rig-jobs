@@ -1,8 +1,11 @@
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { colors } from "../theme";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
-export function DashboardScreen({ stats }) {
+export function DashboardScreen({
+  stats,
+  onPressRecentApplications,
+  onPressSavedJobs,
+}) {
   const cards = [
     { label: "Applications", value: stats.applications },
     { label: "Saved Jobs", value: stats.saved },
@@ -22,17 +25,23 @@ export function DashboardScreen({ stats }) {
         ))}
       </View>
 
-      {/* 🔹 RECENT APPLICATIONS */}
-      <View style={styles.section}>
+      <Pressable
+        style={styles.section}
+        onPress={onPressRecentApplications}
+        disabled={!onPressRecentApplications}
+      >
         <Text style={styles.sectionTitle}>Recent Applications</Text>
         <Text style={styles.empty}>No applications yet.</Text>
-      </View>
+      </Pressable>
 
-      {/* 🔹 SAVED JOBS */}
-      <View style={styles.section}>
+      <Pressable
+        style={styles.section}
+        onPress={onPressSavedJobs}
+        disabled={!onPressSavedJobs}
+      >
         <Text style={styles.sectionTitle}>Saved Jobs</Text>
         <Text style={styles.empty}>No saved jobs yet.</Text>
-      </View>
+      </Pressable>
 
       {/* 🔹 NOTIFICATIONS */}
       <View style={styles.section}>
