@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { colors } from "../theme";
@@ -23,9 +23,11 @@ export function BrandHeader({ onMenu, onPressBrowseJobs }) {
           <Text style={styles.searchText}>Browse Jobs</Text>
         </Pressable>
 
-        <View style={styles.profile}>
-          <Text style={styles.avatarText}>MK</Text>
-        </View>
+        <Image
+          source={require("../assets/logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </View>
     </View>
   );
@@ -37,11 +39,11 @@ const styles = StyleSheet.create({
   },
 
   top: {
-    minHeight: 60,
+    minHeight: 72,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingBottom: 10, // optional spacing
+    paddingVertical: 10,
   },
 
   menuHit: {
@@ -56,7 +58,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
-    marginHorizontal: 10,
+    marginHorizontal: 8,
   },
 
   searchText: {
@@ -65,17 +67,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  profile: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#2F5BEA",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  avatarText: {
-    color: "#fff",
-    fontWeight: "700",
+  logo: {
+    width: 96,
+    height: 46,
+    marginLeft: 8,
   },
 });

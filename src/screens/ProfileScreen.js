@@ -14,6 +14,7 @@ import {
   Alert,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import * as DocumentPicker from "expo-document-picker";
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -527,6 +528,32 @@ const saveCert = (data) => {
   setCertifications(prev => [...prev, data]);
 };
 
+  const pickResume = async () => {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({
+        type: [
+          "application/pdf",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+
+      // SDKs differ slightly in return shape; support both.
+      if (res?.canceled) return;
+      if (res?.type === "cancel") return;
+
+      const picked =
+        Array.isArray(res?.assets) && res.assets.length > 0 ? res.assets[0] : res;
+
+      const name = picked?.name || (picked?.uri ? picked.uri.split("/").pop() : null);
+      if (name) setResumeName(name);
+    } catch (e) {
+      Alert.alert("Upload failed", "Could not open file picker. Please try again.");
+    }
+  };
+
   return (
     <ScrollView
   style={styles.container}
@@ -548,7 +575,6 @@ const saveCert = (data) => {
         </View>
         <View style={styles.progressCircle}>
           <Text style={styles.percent}>{totalPct}%</Text>
-          <Text style={styles.progressLabel}>Profile{"\n"}Completion</Text>
         </View>
       </View>
 
@@ -700,18 +726,7 @@ const saveCert = (data) => {
         ) : (
           <TouchableOpacity
             style={styles.uploadBox}
-            onPress={() => {
-              // In a real app, use expo-document-picker here
-              // Simulating a file pick:
-              Alert.alert(
-                "Upload Resume",
-                "Select resume file",
-                [
-                  { text: "Cancel", style: "cancel" },
-                  { text: "Use Sample Resume.pdf", onPress: () => setResumeName("Resume.pdf") },
-                ]
-              );
-            }}
+            onPress={pickResume}
           >
             <MaterialIcons name="cloud-upload" size={36} color={COLORS.sub} />
             <Text style={styles.uploadText}>Upload Resume</Text>
@@ -769,7 +784,7 @@ header: {
   flexDirection: "row",
   alignItems: "center",
   backgroundColor: COLORS.card,
-  padding: 16,
+  padding: 14,
 
   marginHorizontal: 0,   // ✅ CHANGE
   marginTop: 16,
@@ -779,18 +794,35 @@ header: {
 
 } , 
 avatar: {
-    width: 60, height: 60, borderRadius: 30,
-    backgroundColor: "#6D28D9",
+    width: 46, height: 46, borderRadius: 23,
+    backgroundColor: COLORS.blue,
     alignItems: "center", justifyContent: "center",
+    marginRight: 12,
   },
-  avatarText: { color: "#fff", fontSize: 20, fontWeight: "700" },
+  avatarText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 16,
+    includeFontPadding: false,
+    textAlign: "center",
+    marginTop: 1,
+  },
   name: { fontSize: 16, fontWeight: "700", color: COLORS.text },
   sub: { fontSize: 12, color: COLORS.sub, marginTop: 2 },
   infoRow: { flexDirection: "row", alignItems: "center", marginTop: 6, gap: 4 },
   infoText: { fontSize: 12, color: COLORS.sub },
-  progressCircle: { alignItems: "center", backgroundColor: COLORS.blueLight, borderRadius: 12, padding: 10, minWidth: 72 },
-  percent: { fontSize: 20, fontWeight: "800", color: COLORS.blue },
-  progressLabel: { fontSize: 10, color: COLORS.sub, textAlign: "center", marginTop: 2, lineHeight: 14 },
+  progressCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.blueLight,
+    borderWidth: 2,
+    borderColor: COLORS.blue,
+  },
+  percent: { fontSize: 16, fontWeight: "900", color: COLORS.blue },
 
   // ── Pills ──
   sectionHeading: { fontSize: 12, fontWeight: "600", color: COLORS.sub, letterSpacing: 0.8, textTransform: "uppercase", marginLeft: 16, marginBottom: 8 },

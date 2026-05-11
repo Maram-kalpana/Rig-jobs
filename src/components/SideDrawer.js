@@ -10,10 +10,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const menu = [
-  { key: "jobs", label: "Browse Jobs", icon: "work-outline" },
+  { key: "jobs", label: "Browse Jobs", icon: "work" },
   { key: "applications", label: "My Applications", icon: "description" },
   { key: "saved", label: "Saved Jobs", icon: "bookmark-border" },
-  { key: "profile", label: "My Profile", icon: "person-outline" },
+  { key: "profile", label: "My Profile", icon: "person" },
   { key: "settings", label: "Settings", icon: "settings" },
 ];
 
@@ -23,7 +23,10 @@ export function SideDrawer({ activeKey, onNavigate, onLogout }) {
       <ScrollView showsVerticalScrollIndicator={false}>
         
         {/* Profile */}
-        <View style={styles.profileRow}>
+        <Pressable
+          style={styles.profileRow}
+          onPress={() => onNavigate?.("profile")}
+        >
           <View style={styles.avatar}>
             <MaterialIcons name="person" size={22} color="#fff" />
           </View>
@@ -34,9 +37,7 @@ export function SideDrawer({ activeKey, onNavigate, onLogout }) {
           </View>
 
           <MaterialIcons name="chevron-right" size={20} color="#999" />
-        </View>
-
-        <Text style={styles.progress}>100%</Text>
+        </Pressable>
 
         {/* Menu */}
         <View style={styles.menu}>
@@ -95,14 +96,6 @@ const styles = StyleSheet.create({
 
   name: { fontSize: 17, fontWeight: "600", color: "#222" },
   update: { fontSize: 14, color: "#2F5BEA" },
-
-  progress: {
-    marginLeft: 16,
-    marginBottom: 10,
-    color: "green",
-    fontSize: 13,
-    fontWeight: "600",
-  },
 
   menu: { marginTop: 8 },
 

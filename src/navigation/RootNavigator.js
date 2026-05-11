@@ -23,6 +23,9 @@ import { ProfileScreen } from "../screens/ProfileScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import { JobDetailsScreen } from "../screens/JobDetailsScreen";
 import { BottomTabBar } from "../components/BottomTabBar";
+import { SplashScreen } from "../screens/SplashScreen";
+import { WelcomeScreen } from "../screens/WelcomeScreen";
+import { PaymentSheet } from "../components/PaymentSheet";
 
 export function RootNavigator() {
   const { width } = useWindowDimensions();
@@ -42,12 +45,30 @@ export function RootNavigator() {
   } = useApp();
 
   const [authRoute, setAuthRoute] = useState("register");
+  const [showSplash, setShowSplash] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [route, setRoute] = useState("jobs");
   const [selectedJob, setSelectedJob] = useState(null);
   const [detailsFrom, setDetailsFrom] = useState("jobs");
+  const [payJobId, setPayJobId] = useState(null);
+  const [payStep, setPayStep] = useState(0); // 0=closed, 1=required, 2=payment, 3=options
 
   const drawerWidth = Math.min(width * 0.78, 320);
+
+  const requestPayment = useCallback((jobId) => {
+    if (!jobId) return;
+    setPayJobId(jobId);
+    setPayStep(1);
+  }, []);
+
+  const closePayment = useCallback(() => {
+    setPayStep(0);
+    setPayJobId(null);
+  }, []);
+
+  const goToPaymentPage = useCallback(() => setPayStep(2), []);
+  const goToPaymentOptions = useCallback(() => setPayStep(3), []);
 
   const goHome = useCallback(() => {
     setRoute("dashboard");
@@ -77,13 +98,7 @@ export function RootNavigator() {
             setRoute(detailsFrom);
             setSelectedJob(null);
           }}
-          onApply={(job) => {
-  console.log("APPLY CLICKED"); // debug
-
-  setSelectedJob(job);
-  setDetailsFrom("saved"); // 🔥 VERY IMPORTANT
-  setRoute("details");
-}}
+          onApply={(jobId) => requestPayment(jobId)}
           onSave={toggleSaveJob}
           applied={isApplied(selectedJob.id)}
           saved={isSaved(selectedJob.id)}
@@ -132,10 +147,7 @@ export function RootNavigator() {
         openJobDetails(job, "saved")
       }
       onToggleSave={toggleSaveJob}
-      onApply={(job) => {
-        setSelectedJob(job);
-        setRoute("details"); // 👈 reuse JobDetailsScreen
-      }}
+      onApply={(job) => requestPayment(job?.id ?? job)}
     />
   );
 }
@@ -163,7 +175,7 @@ export function RootNavigator() {
         onOpenJob={(job) =>
           openJobDetails(job, "jobs")
         }
-        onApply={applyForJob}
+        onApply={(jobId) => requestPayment(jobId)}
         onSave={toggleSaveJob}
         isApplied={isApplied}
         isSaved={isSaved}
@@ -174,7 +186,7 @@ export function RootNavigator() {
     selectedJob,
     detailsFrom,
     openJobDetails,
-    applyForJob,
+    requestPayment,
     toggleSaveJob,
     isApplied,
     isSaved,
@@ -187,6 +199,30 @@ export function RootNavigator() {
 
   // 🔐 AUTH FLOW
   if (!currentUser) {
+    if (showSplash) {
+      return (
+        <SplashScreen
+          durationMs={3000}
+          onDone={() => setShowSplash(false)}
+        />
+      );
+    }
+
+    if (showWelcome) {
+      return (
+        <WelcomeScreen
+          onPressRegister={() => {
+            setAuthRoute("register");
+            setShowWelcome(false);
+          }}
+          onPressLogin={() => {
+            setAuthRoute("login");
+            setShowWelcome(false);
+          }}
+        />
+      );
+    }
+
     if (authRoute === "register") {
       return (
         <RegisterScreen
@@ -216,11 +252,12 @@ export function RootNavigator() {
 
   // 🔥 MAIN UI
   return (
-    <SafeAreaView
-      style={[styles.page, { backgroundColor: colors.pageBg }]}
-      edges={["left", "right", "bottom"]} // 🚀 NO TOP
-    >
-      <View style={styles.shell}>
+    <>
+      <SafeAreaView
+        style={[styles.page, { backgroundColor: colors.pageBg }]}
+        edges={["left", "right", "bottom"]} // 🚀 NO TOP
+      >
+        <View style={styles.shell}>
 
         {/* HEADER */}
         <BrandHeader
@@ -283,8 +320,42 @@ export function RootNavigator() {
             </View>
           </>
         )}
-      </View>
-    </SafeAreaView>
+        </View>
+      </SafeAreaView>
+
+      <PaymentSheet
+        visible={payStep === 1}
+        title="Payment Required"
+        amountText="$5"
+        amountHint="You'll be redirected to payment page to complete your application."
+        feeLabel="Application Fee"
+        onClose={closePayment}
+        onPay={() => goToPaymentPage()}
+      />
+
+      <PaymentSheet
+        visible={payStep === 2}
+        title="Payment"
+        amountText="$5"
+        amountHint="This is a placeholder payment page. Integrate Stripe/Razorpay here."
+        feeLabel="Application Fee"
+        onClose={closePayment}
+        onPay={() => goToPaymentOptions()}
+      />
+
+      <PaymentSheet
+        visible={payStep === 3}
+        title="Payment Options"
+        amountText="$5"
+        amountHint="≈ ₹472.85"
+        feeLabel="Application Fee"
+        onClose={closePayment}
+        onPay={() => {
+          if (payJobId) applyForJob(payJobId);
+          closePayment();
+        }}
+      />
+    </>
   );
 }
 

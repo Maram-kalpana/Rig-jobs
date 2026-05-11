@@ -5,8 +5,25 @@ import { colors } from "../theme";
 export function ApplicationsScreen({ applications, onOpenJob }) {
   const [activeTab, setActiveTab] = useState("All");
 
+  const dummyApplications = [
+    {
+      id: "dummy-app-1",
+      title: "Rig Mechanic",
+      company: "DeepSea Rigs",
+      location: "Chennai, IN",
+    },
+    {
+      id: "dummy-app-2",
+      title: "HSE Officer",
+      company: "BlueWave Offshore",
+      location: "Cochin, IN",
+    },
+  ];
+
+  const list = applications?.length ? applications : dummyApplications;
+
   const stats = [
-    { label: "Total Applied", value: applications.length },
+    { label: "Total Applied", value: list.length },
     { label: "Active", value: 0 },
     { label: "Interviews", value: 0 },
     { label: "Shortlisted", value: 0 },
@@ -59,14 +76,8 @@ export function ApplicationsScreen({ applications, onOpenJob }) {
       </ScrollView>
 
       {/* 🔹 CONTENT */}
-      {applications.length === 0 ? (
-        <View style={styles.emptyBox}>
-          <Text style={styles.emptyTitle}>No applications found</Text>
-          <Text style={styles.emptySub}>Try a different filter or search term</Text>
-        </View>
-      ) : (
-        applications.map((job) => (
-          <Pressable key={job.id} onPress={() => onOpenJob(job)} style={styles.card}>
+      {list.map((job) => (
+          <Pressable key={job.id} onPress={() => onOpenJob?.(job)} style={styles.card}>
             <View style={styles.avatar}>
               <Text style={styles.avatarTxt}>{job.company.charAt(0)}</Text>
             </View>
@@ -77,8 +88,7 @@ export function ApplicationsScreen({ applications, onOpenJob }) {
               </Text>
             </View>
           </Pressable>
-        ))
-      )}
+        ))}
     </ScrollView>
   );
 }

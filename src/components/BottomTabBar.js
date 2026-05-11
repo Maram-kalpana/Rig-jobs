@@ -5,8 +5,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 const tabs = [
   { key: "dashboard", label: "Home", icon: "home" },
   { key: "jobs", label: "Apply", icon: "send" },
-  { key: "applications", label: "N Vites", icon: "mail-outline" },
-  { key: "profile", label: "Profile", icon: "person-outline" },
+  { key: "applications", label: "N Vites", icon: "mail" },
+  { key: "profile", label: "Profile", icon: "person" },
 ];
 
 export function BottomTabBar({ active, onChange }) {

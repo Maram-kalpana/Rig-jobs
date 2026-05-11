@@ -22,7 +22,6 @@ export function LoginScreen({ onLoginSuccess, onNavigateRegister }) {
   return (
     <ScreenSafeView style={styles.safe}>
       <ScrollView style={styles.page} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <BrandHeader />
         <View style={styles.card}>
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.sub}>Sign in to your candidate account to continue</Text>
@@ -42,8 +41,13 @@ export function LoginScreen({ onLoginSuccess, onNavigateRegister }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.pageBg },
   page: { flex: 1 },
-  scrollContent: { paddingBottom: 32 },
-  card: { margin: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel, padding: 14 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingBottom: 32,
+  },
+  card: { borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel, padding: 14 },
   title: { color: colors.textPrimary, fontSize: 42 / 2, fontWeight: "800" },
   sub: { color: colors.textSecondary, fontSize: 17, marginVertical: 12 },
   message: { marginBottom: 10, color: "#A13B30", fontWeight: "600" },

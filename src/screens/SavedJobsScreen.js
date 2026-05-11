@@ -5,6 +5,25 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { colors } from "../theme";
 
 export function SavedJobsScreen({ jobs, onOpenJob, onToggleSave, onApply }) {
+  const dummySavedJobs = [
+    {
+      id: "dummy-saved-1",
+      title: "Offshore Rig Electrician",
+      company: "RigWorld Energy",
+      location: "Mumbai, IN",
+      salary: "₹ 8 LPA",
+    },
+    {
+      id: "dummy-saved-2",
+      title: "Drilling Engineer",
+      company: "Oceanic Drills",
+      location: "Goa, IN",
+      salary: "₹ 14 LPA",
+    },
+  ];
+
+  const list = jobs?.length ? jobs : dummySavedJobs;
+
   return (
     <ScrollView
       style={styles.scroll}
@@ -14,14 +33,7 @@ export function SavedJobsScreen({ jobs, onOpenJob, onToggleSave, onApply }) {
       <Text style={styles.title}>Saved Jobs</Text>
       <Text style={styles.subtitle}>Roles you bookmarked for later</Text>
 
-      {jobs.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>
-            No saved jobs yet. Save a job from the list or job details.
-          </Text>
-        </View>
-      ) : (
-        jobs.map((job) => (
+      {list.map((job) => (
           <View key={job.id} style={styles.card}>
             
             {/* 🔹 HEADER ROW */}
@@ -31,7 +43,7 @@ export function SavedJobsScreen({ jobs, onOpenJob, onToggleSave, onApply }) {
               </Pressable>
 
               {/* 🔹 UNSAVE ICON */}
-              <Pressable onPress={() => onToggleSave(job.id)}>
+              <Pressable onPress={() => onToggleSave?.(job.id)}>
                 <MaterialIcons name="bookmark-remove" size={22} color="#64748B" />
               </Pressable>
             </View>
@@ -43,7 +55,7 @@ export function SavedJobsScreen({ jobs, onOpenJob, onToggleSave, onApply }) {
             <Text style={styles.salary}>{job.salary}</Text>
 
             {/* 🔹 APPLY BUTTON */}
-            <Pressable onPress={() => onApply(job)}>
+            <Pressable onPress={() => onApply?.(job)}>
               <LinearGradient
                 colors={["#2F5BEA", "#1DA1F2"]} // blue gradient
                 start={{ x: 0, y: 0 }}
@@ -54,8 +66,7 @@ export function SavedJobsScreen({ jobs, onOpenJob, onToggleSave, onApply }) {
               </LinearGradient>
             </Pressable>
           </View>
-        ))
-      )}
+        ))}
     </ScrollView>
   );
 }
