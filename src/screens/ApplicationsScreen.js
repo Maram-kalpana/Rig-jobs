@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, TextInput } from "react-native";
 import { colors } from "../theme";
 
 export function ApplicationsScreen({ applications, onOpenJob }) {
   const [activeTab, setActiveTab] = useState("All");
+  const [searchText, setSearchText] = useState("");
 
   const dummyApplications = [
     {
@@ -21,6 +22,17 @@ export function ApplicationsScreen({ applications, onOpenJob }) {
   ];
 
   const list = applications?.length ? applications : dummyApplications;
+
+  const filteredList = useMemo(() => {
+    if (!searchText.trim()) return list;
+    const q = searchText.toLowerCase();
+    return list.filter(
+      (job) =>
+        job.title?.toLowerCase().includes(q) ||
+        job.company?.toLowerCase().includes(q) ||
+        job.location?.toLowerCase().includes(q)
+    );
+  }, [list, searchText]);
 
   const stats = [
     { label: "Total Applied", value: list.length },
@@ -57,6 +69,8 @@ export function ApplicationsScreen({ applications, onOpenJob }) {
           placeholder="Search applications..."
           placeholderTextColor="#94A3B8"
           style={styles.searchInput}
+          value={searchText}
+          onChangeText={setSearchText}
         />
       </View>
 
@@ -76,7 +90,13 @@ export function ApplicationsScreen({ applications, onOpenJob }) {
       </ScrollView>
 
       {/* 🔹 CONTENT */}
-      {list.map((job) => (
+      {filteredList.length === 0 && (
+        <View style={styles.emptyBox}>
+          <Text style={styles.emptyTitle}>No applications found</Text>
+          <Text style={styles.emptySub}>Try adjusting your search or filter.</Text>
+        </View>
+      )}
+      {filteredList.map((job) => (
           <Pressable key={job.id} onPress={() => onOpenJob?.(job)} style={styles.card}>
             <View style={styles.avatar}>
               <Text style={styles.avatarTxt}>{job.company.charAt(0)}</Text>

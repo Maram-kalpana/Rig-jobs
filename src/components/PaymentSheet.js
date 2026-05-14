@@ -61,7 +61,6 @@ export function PaymentSheet({
                   <Text style={styles.amountValue}>{amountText}</Text>
                   {amountHint ? <Text style={styles.amountHint}>{amountHint}</Text> : null}
                 </View>
-                <Text style={styles.feePill}>{feeLabel}</Text>
               </View>
 
               {isMethodsScreen ? (

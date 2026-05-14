@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as DocumentPicker from "expo-document-picker";
+import { useAuth } from "../context/AuthContext";
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -209,6 +210,10 @@ function AboutModal({ visible, initial, onClose, onSave }) {
     </ModalWrapper>
   );
 }
+
+// ─────────────────────────────────────────────
+// KEY SKILLS MODAL - Removed Cancel/Save buttons
+// ─────────────────────────────────────────────
 function SkillsModal({ visible, initial, onClose, onSave }) {
   const [input, setInput] = useState("");
   const [localSkills, setLocalSkills] = useState(initial || []);
@@ -223,18 +228,20 @@ function SkillsModal({ visible, initial, onClose, onSave }) {
   const add = () => {
     const v = input.trim();
     if (!v) return;
-
     if (localSkills.includes(v)) {
       Alert.alert("Duplicate", "Skill already added.");
       return;
     }
-
-    setLocalSkills(prev => [...prev, v]);
+    const updated = [...localSkills, v];
+    setLocalSkills(updated);
+    onSave(updated);
     setInput("");
   };
 
   const remove = (i) => {
-    setLocalSkills(prev => prev.filter((_, idx) => idx !== i));
+    const updated = localSkills.filter((_, idx) => idx !== i);
+    setLocalSkills(updated);
+    onSave(updated);
   };
 
   return (
@@ -263,14 +270,6 @@ function SkillsModal({ visible, initial, onClose, onSave }) {
           ))}
         </View>
       </View>
-
-      <ModalFooter
-        onCancel={onClose}
-        onSave={() => {
-          onSave(localSkills);
-          onClose();
-        }}
-      />
     </ModalWrapper>
   );
 }
@@ -291,9 +290,9 @@ const defaultEmp = {
   profile: "",
 };
 
-function EmploymentModal({ visible, onClose, onSave }) {
-  const [form, setForm] = useState(defaultEmp);
-  React.useEffect(() => { if (visible) setForm(defaultEmp); }, [visible]);
+function EmploymentModal({ visible, initial, onClose, onSave }) {
+  const [form, setForm] = useState(initial || defaultEmp);
+  React.useEffect(() => { if (visible) setForm(initial || defaultEmp); }, [visible, initial]);
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
   const handleSave = () => {
@@ -355,9 +354,9 @@ const defaultEdu = {
   grading: "", gradeValue: "",
 };
 
-function EducationModal({ visible, onClose, onSave }) {
-  const [form, setForm] = useState(defaultEdu);
-  React.useEffect(() => { if (visible) setForm(defaultEdu); }, [visible]);
+function EducationModal({ visible, initial, onClose, onSave }) {
+  const [form, setForm] = useState(initial || defaultEdu);
+  React.useEffect(() => { if (visible) setForm(initial || defaultEdu); }, [visible, initial]);
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
   const handleSave = () => {
@@ -405,9 +404,9 @@ function EducationModal({ visible, onClose, onSave }) {
 // ─────────────────────────────────────────────
 const defaultCert = { name: "", org: "", year: "", month: "", credId: "" };
 
-function CertModal({ visible, onClose, onSave }) {
-  const [form, setForm] = useState(defaultCert);
-  React.useEffect(() => { if (visible) setForm(defaultCert); }, [visible]);
+function CertModal({ visible, initial, onClose, onSave }) {
+  const [form, setForm] = useState(initial || defaultCert);
+  React.useEffect(() => { if (visible) setForm(initial || defaultCert); }, [visible, initial]);
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
   const handleSave = () => {
@@ -449,23 +448,21 @@ function SectionPill({ label, pct }) {
   );
 }
 
-  
-
-    
-  
 // ─────────────────────────────────────────────
 // MAIN PROFILE SCREEN
 // ─────────────────────────────────────────────
 export function ProfileScreen() {
+  const { currentUser, profile, setProfile } = useAuth();
+
   // State
-  const [about, setAbout] = useState("");
-  const [skills, setSkills] = useState([]);
+  const [about, setAbout] = useState(profile?.about || "");
+  const [skills, setSkills] = useState(profile?.skills || []);
   const [skillInput, setSkillInput] = useState("");
   const [skillsEditing, setSkillsEditing] = useState(false);
-  const [employment, setEmployment] = useState([]);
-  const [education, setEducation] = useState([]);
-  const [certifications, setCertifications] = useState([]);
-  const [resumeName, setResumeName] = useState(null);
+  const [employment, setEmployment] = useState(profile?.employment || []);
+  const [education, setEducation] = useState(profile?.education || []);
+  const [certifications, setCertifications] = useState(profile?.certifications || []);
+  const [resumeName, setResumeName] = useState(profile?.resumeName || null);
   const [showSkillsModal, setShowSkillsModal] = useState(false);
 
   // Modal visibility
@@ -474,6 +471,24 @@ export function ProfileScreen() {
   const [showEducation, setShowEducation] = useState(false);
   const [showCert, setShowCert] = useState(false);
 
+  // Edit state: null = adding, object = editing
+  const [editingEmployment, setEditingEmployment] = useState(null);
+  const [editingEducation, setEditingEducation] = useState(null);
+  const [editingCert, setEditingCert] = useState(null);
+
+  // Sync local state back to AuthContext profile on change
+  useEffect(() => {
+    setProfile({
+      ...profile,
+      about,
+      skills,
+      employment,
+      education,
+      certifications,
+      resumeName,
+    });
+  }, [about, skills, employment, education, certifications, resumeName]);
+
   // ── Completion Calc ──
   const sections = [
     { label: "About", pct: about ? 100 : 0 },
@@ -481,52 +496,81 @@ export function ProfileScreen() {
     { label: "Employment", pct: employment.length > 0 ? 100 : 0 },
     { label: "Education", pct: education.length > 0 ? 100 : 0 },
     { label: "Certifications", pct: certifications.length > 0 ? 100 : 0 },
-    
     { label: "Resume", pct: resumeName ? 100 : 0 },
   ];
   const totalPct = Math.round(
-  sections.reduce((acc, s) => acc + s.pct, 0) / sections.length
-);
+    sections.reduce((acc, s) => acc + s.pct, 0) / sections.length
+  );
 
   // ── Skills Handlers ──
   const addSkill = () => {
-  const v = skillInput.trim();
-
-  if (!v) return;
-
-  if (skills.includes(v)) {
-    Alert.alert("Duplicate", "Skill already added.");
-    return;
-  }
-
-  setSkills(prev => [...prev, v]);
-  setSkillInput("");
-
-  // ✅ ADD THIS LINE
-  setSkillsEditing(true);
-};
+    const v = skillInput.trim();
+    if (!v) return;
+    if (skills.includes(v)) {
+      Alert.alert("Duplicate", "Skill already added.");
+      return;
+    }
+    setSkills(prev => [...prev, v]);
+    setSkillInput("");
+    setSkillsEditing(true);
+  };
   const removeSkill = (i) => setSkills(prev => prev.filter((_, idx) => idx !== i));
 
-  // ── Employment Handlers ──
+  // ── Employment Handlers (add + edit) ──
   const removeEmployment = (i) =>
-  setEmployment(prev => prev.filter((_, idx) => idx !== i));
+    setEmployment(prev => prev.filter((_, idx) => idx !== i));
 
-const removeEducation = (i) =>
-  setEducation(prev => prev.filter((_, idx) => idx !== i));
+  const saveEmployment = (data) => {
+    if (editingEmployment !== null) {
+      // Edit mode: update existing entry
+      setEmployment(prev => prev.map((item, idx) => idx === editingEmployment ? data : item));
+      setEditingEmployment(null);
+    } else {
+      // Add mode: append new entry
+      setEmployment(prev => [...prev, data]);
+    }
+  };
 
-const removeCert = (i) =>
-  setCertifications(prev => prev.filter((_, idx) => idx !== i));
-const saveEmployment = (data) => {
-  setEmployment(prev => [...prev, data]);
-};
+  const startEditEmployment = (index) => {
+    setEditingEmployment(index);
+    setShowEmployment(true);
+  };
 
-const saveEducation = (data) => {
-  setEducation(prev => [...prev, data]);
-};
+  // ── Education Handlers (add + edit) ──
+  const removeEducation = (i) =>
+    setEducation(prev => prev.filter((_, idx) => idx !== i));
 
-const saveCert = (data) => {
-  setCertifications(prev => [...prev, data]);
-};
+  const saveEducation = (data) => {
+    if (editingEducation !== null) {
+      setEducation(prev => prev.map((item, idx) => idx === editingEducation ? data : item));
+      setEditingEducation(null);
+    } else {
+      setEducation(prev => [...prev, data]);
+    }
+  };
+
+  const startEditEducation = (index) => {
+    setEditingEducation(index);
+    setShowEducation(true);
+  };
+
+  // ── Certification Handlers (add + edit) ──
+  const removeCert = (i) =>
+    setCertifications(prev => prev.filter((_, idx) => idx !== i));
+
+  const saveCert = (data) => {
+    if (editingCert !== null) {
+      setCertifications(prev => prev.map((item, idx) => idx === editingCert ? data : item));
+      setEditingCert(null);
+    } else {
+      setCertifications(prev => [...prev, data]);
+    }
+  };
+
+  const startEditCert = (index) => {
+    setEditingCert(index);
+    setShowCert(true);
+  };
 
   const pickResume = async () => {
     try {
@@ -540,7 +584,6 @@ const saveCert = (data) => {
         multiple: false,
       });
 
-      // SDKs differ slightly in return shape; support both.
       if (res?.canceled) return;
       if (res?.type === "cancel") return;
 
@@ -554,23 +597,32 @@ const saveCert = (data) => {
     }
   };
 
+  // Get user display info from profile or currentUser
+  const displayName = profile?.fullName || currentUser?.fullName || "User";
+  const displayEmail = profile?.email || currentUser?.email || "";
+  const initials = displayName
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join("");
+
   return (
     <ScrollView
-  style={styles.container}
-  contentContainerStyle={{ paddingBottom: 100 }}
-  showsVerticalScrollIndicator={false}
->
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 100 }}
+      showsVerticalScrollIndicator={false}
+    >
       {/* ── HEADER ── */}
       <View style={styles.header}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>MK</Text>
+          <Text style={styles.avatarText}>{initials}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.name}>m kalpana</Text>
+          <Text style={styles.name}>{displayName}</Text>
           <Text style={styles.sub}>Profile last updated - Today</Text>
           <View style={styles.infoRow}>
             <MaterialIcons name="email" size={14} color={COLORS.sub} />
-            <Text style={styles.infoText}>maramkalpana@gmail.com</Text>
+            <Text style={styles.infoText}>{displayEmail}</Text>
           </View>
         </View>
         <View style={styles.progressCircle}>
@@ -598,7 +650,6 @@ const saveCert = (data) => {
           <Text style={styles.empty}>No description added yet.</Text>
         )}
       </View>
-      
 
       {/* ── KEY SKILLS ── */}
       <View style={styles.card}>
@@ -608,8 +659,6 @@ const saveCert = (data) => {
             <Text style={styles.cardAction}>+ Add</Text>
           </TouchableOpacity>
         </View>
-
-     
 
         {skills.length > 0 ? (
           <View style={styles.skillsWrap}>
@@ -631,7 +680,7 @@ const saveCert = (data) => {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Employment</Text>
-          <TouchableOpacity onPress={() => setShowEmployment(true)}>
+          <TouchableOpacity onPress={() => { setEditingEmployment(null); setShowEmployment(true); }}>
             <Text style={styles.cardAction}>+ Add</Text>
           </TouchableOpacity>
         </View>
@@ -647,9 +696,14 @@ const saveCert = (data) => {
               <Text style={styles.listItemSub}>Exp: {e.expYears}y {e.expMonths}m{e.salary ? ` · ₹${parseInt(e.salary).toLocaleString("en-IN")}` : ""}</Text>
               {e.profile ? <Text style={[styles.listItemSub, { marginTop: 4 }]}>{e.profile}</Text> : null}
             </View>
-            <TouchableOpacity onPress={() => removeEmployment(i)} style={styles.removeBtn}>
-              <MaterialIcons name="delete-outline" size={18} color={COLORS.red} />
-            </TouchableOpacity>
+            <View style={styles.listItemActions}>
+              <TouchableOpacity onPress={() => startEditEmployment(i)} style={styles.editBtn}>
+                <MaterialIcons name="edit" size={18} color={COLORS.blue} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => removeEmployment(i)} style={styles.removeBtn}>
+                <MaterialIcons name="delete-outline" size={18} color={COLORS.red} />
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
       </View>
@@ -658,7 +712,7 @@ const saveCert = (data) => {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Education</Text>
-          <TouchableOpacity onPress={() => setShowEducation(true)}>
+          <TouchableOpacity onPress={() => { setEditingEducation(null); setShowEducation(true); }}>
             <Text style={styles.cardAction}>+ Add</Text>
           </TouchableOpacity>
         </View>
@@ -673,9 +727,14 @@ const saveCert = (data) => {
               <Text style={styles.listItemSub}>{e.courseType}{e.startYear ? ` · ${e.startYear}` : ""}{e.endYear ? ` – ${e.endYear}` : ""}</Text>
               <Text style={styles.listItemSub}>{e.grading}{e.gradeValue ? ` · ${e.gradeValue}` : ""}</Text>
             </View>
-            <TouchableOpacity onPress={() => removeEducation(i)} style={styles.removeBtn}>
-              <MaterialIcons name="delete-outline" size={18} color={COLORS.red} />
-            </TouchableOpacity>
+            <View style={styles.listItemActions}>
+              <TouchableOpacity onPress={() => startEditEducation(i)} style={styles.editBtn}>
+                <MaterialIcons name="edit" size={18} color={COLORS.blue} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => removeEducation(i)} style={styles.removeBtn}>
+                <MaterialIcons name="delete-outline" size={18} color={COLORS.red} />
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
       </View>
@@ -684,7 +743,7 @@ const saveCert = (data) => {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Certifications</Text>
-          <TouchableOpacity onPress={() => setShowCert(true)}>
+          <TouchableOpacity onPress={() => { setEditingCert(null); setShowCert(true); }}>
             <Text style={styles.cardAction}>+ Add</Text>
           </TouchableOpacity>
         </View>
@@ -697,9 +756,14 @@ const saveCert = (data) => {
               {c.month && c.year ? <Text style={styles.listItemSub}>Issued {c.month} {c.year}</Text> : null}
               {c.credId ? <Text style={styles.listItemSub}>ID: {c.credId}</Text> : null}
             </View>
-            <TouchableOpacity onPress={() => removeCert(i)} style={styles.removeBtn}>
-              <MaterialIcons name="delete-outline" size={18} color={COLORS.red} />
-            </TouchableOpacity>
+            <View style={styles.listItemActions}>
+              <TouchableOpacity onPress={() => startEditCert(i)} style={styles.editBtn}>
+                <MaterialIcons name="edit" size={18} color={COLORS.blue} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => removeCert(i)} style={styles.removeBtn}>
+                <MaterialIcons name="delete-outline" size={18} color={COLORS.red} />
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
       </View>
@@ -745,30 +809,29 @@ const saveCert = (data) => {
         onSave={setAbout}
       />
       <SkillsModal
-  visible={showSkillsModal}
-  initial={skills}
-  onClose={() => setShowSkillsModal(false)}
-  onSave={setSkills}
-/>
+        visible={showSkillsModal}
+        initial={skills}
+        onClose={() => setShowSkillsModal(false)}
+        onSave={setSkills}
+      />
       <EmploymentModal
         visible={showEmployment}
-        onClose={() => setShowEmployment(false)}
+        initial={editingEmployment !== null ? employment[editingEmployment] : null}
+        onClose={() => { setShowEmployment(false); setEditingEmployment(null); }}
         onSave={saveEmployment}
       />
       <EducationModal
         visible={showEducation}
-        onClose={() => setShowEducation(false)}
+        initial={editingEducation !== null ? education[editingEducation] : null}
+        onClose={() => { setShowEducation(false); setEditingEducation(null); }}
         onSave={saveEducation}
       />
       <CertModal
         visible={showCert}
-        onClose={() => setShowCert(false)}
+        initial={editingCert !== null ? certifications[editingCert] : null}
+        onClose={() => { setShowCert(false); setEditingCert(null); }}
         onSave={saveCert}
       />
-      
-
-  
-
     </ScrollView>
   );
 }
@@ -780,20 +843,17 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
 
   // ── Header ──
-header: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: COLORS.card,
-  padding: 14,
-
-  marginHorizontal: 0,   // ✅ CHANGE
-  marginTop: 16,
-  marginBottom: 8,
-
-  borderRadius: 16,
-
-} , 
-avatar: {
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.card,
+    padding: 14,
+    marginHorizontal: 0,
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 16,
+  },
+  avatar: {
     width: 46, height: 46, borderRadius: 23,
     backgroundColor: COLORS.blue,
     alignItems: "center", justifyContent: "center",
@@ -836,12 +896,12 @@ avatar: {
   pillLabel: { fontSize: 13, fontWeight: "600", color: COLORS.text },
   pillPct: { fontSize: 11, marginTop: 2 },
   pillBar: {
-  height: 4,
-  backgroundColor: "transparent", // ✅ remove gray
-  borderRadius: 4,
-  marginTop: 8,
-  overflow: "hidden",
-},
+    height: 4,
+    backgroundColor: "transparent",
+    borderRadius: 4,
+    marginTop: 8,
+    overflow: "hidden",
+  },
   pillFill: { height: "100%", backgroundColor: COLORS.green, borderRadius: 4 },
 
   // ── Card ──
@@ -861,22 +921,22 @@ avatar: {
   skillInput: { flex: 1, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14, color: COLORS.text },
   addBtn: { backgroundColor: COLORS.blue, borderRadius: 10, width: 44, alignItems: "center", justifyContent: "center" },
   addBtnText: { color: "#fff", fontSize: 24, fontWeight: "300", lineHeight: 28 },
-  saveBtn: { marginTop: 10, backgroundColor: COLORS.green, borderRadius: 10, padding: 12, alignItems: "center" },
-  saveBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
   skillsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
   skillTag: { flexDirection: "row", alignItems: "center", backgroundColor: COLORS.blueLight, borderRadius: 20, paddingVertical: 5, paddingHorizontal: 12, gap: 6 },
   skillTagText: { fontSize: 13, color: COLORS.blue, fontWeight: "500" },
 
   // ── List Items ──
   listItem: {
-  flexDirection: "row",
-  alignItems: "flex-start",
-  marginTop: 12,
-  paddingTop: 12,
-  gap: 8,
-},
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginTop: 12,
+    paddingTop: 12,
+    gap: 8,
+  },
   listItemTitle: { fontSize: 14, fontWeight: "600", color: COLORS.text },
   listItemSub: { fontSize: 12, color: COLORS.sub, marginTop: 2 },
+  listItemActions: { flexDirection: "row", gap: 6 },
+  editBtn: { padding: 4 },
   removeBtn: { padding: 4 },
 
   // ── Resume ──
@@ -898,13 +958,13 @@ avatar: {
   modalTitle: { fontSize: 18, fontWeight: "700", color: COLORS.text },
   modalClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.bg, alignItems: "center", justifyContent: "center" },
   modalFooter: {
-  flexDirection: "row",
-  justifyContent: "flex-end",
-  gap: 10,
-  marginTop: 20,
-  paddingTop: 16,
-  marginBottom: 8,
-},
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+    marginTop: 20,
+    paddingTop: 16,
+    marginBottom: 8,
+  },
   btnCancel: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 10, borderWidth: 1.5, borderColor: COLORS.border },
   btnCancelText: { fontSize: 14, fontWeight: "600", color: COLORS.text },
   btnSave: { paddingVertical: 10, paddingHorizontal: 24, borderRadius: 10, backgroundColor: COLORS.blue },
