@@ -21,6 +21,7 @@ const defaultProfile = {
   phone: "",
   location: "",
   openToWork: true,
+  profilePhoto: null,
 };
 
 // ─────────────────────────────────────────────

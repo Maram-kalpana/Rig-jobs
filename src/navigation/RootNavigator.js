@@ -440,6 +440,8 @@ export function RootNavigator() {
                     setSelectedJob(null);
                     setDrawerOpen(false);
                   }}
+                  userName={profile?.fullName || currentUser?.fullName || "User"}
+                  profilePhoto={profile?.profilePhoto || null}
                 />
               </View>
             </>

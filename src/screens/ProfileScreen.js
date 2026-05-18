@@ -12,9 +12,12 @@ import {
   Platform,
   KeyboardAvoidingView,
   Alert,
+  Image,
+  ActionSheetIOS,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../context/AuthContext";
 
 // ─────────────────────────────────────────────
@@ -43,7 +46,7 @@ const YEARS = Array.from({ length: 30 }, (_, i) => String(new Date().getFullYear
 
 const EDU_LEVELS = [
   "Class X", "Class XII", "Diploma", "B.Tech/B.E.", "BCA", "B.Sc",
-  "B.Com", "BBA", "BA", "M.Tech/M.E.", "MCA", "MBA", "M.Sc", "PhD",
+  "B.Com", "BBA", "BA", "BA", "M.Tech/M.E.", "MCA", "MBA", "M.Sc", "PhD",
 ];
 
 const EDU_COURSES = [
@@ -59,6 +62,40 @@ const EDU_SPECS = [
 const GRADING_SYSTEMS = [
   "Percentage", "CGPA out of 10", "CGPA out of 7", "CGPA out of 4",
 ];
+
+// ─────────────────────────────────────────────
+// SMALL REUSABLE COMPONENT: Photo picker action sheet
+// ─────────────────────────────────────────────
+function PhotoPickerModal({ visible, onClose, onCamera, onGallery, onRemove }) {
+  return (
+    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.photoPickerOverlay}>
+          <TouchableWithoutFeedback>
+            <View style={styles.photoPickerSheet}>
+              <Text style={styles.photoPickerTitle}>Profile Photo</Text>
+              <TouchableOpacity style={styles.photoPickerOption} onPress={onCamera}>
+                <MaterialIcons name="camera-alt" size={22} color={COLORS.blue} />
+                <Text style={styles.photoPickerOptionText}>Take Photo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.photoPickerOption} onPress={onGallery}>
+                <MaterialIcons name="photo-library" size={22} color={COLORS.blue} />
+                <Text style={styles.photoPickerOptionText}>Choose from Gallery</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.photoPickerOption} onPress={onRemove}>
+                <MaterialIcons name="delete-outline" size={22} color={COLORS.red} />
+                <Text style={[styles.photoPickerOptionText, { color: COLORS.red }]}>Remove Photo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.photoPickerCancel} onPress={onClose}>
+                <Text style={styles.photoPickerCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+}
 
 // ─────────────────────────────────────────────
 // SMALL REUSABLE COMPONENTS
@@ -191,6 +228,7 @@ function ModalFooter({ onCancel, onSave }) {
 }
 
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────
 // ABOUT MODAL
 // ─────────────────────────────────────────────
 function AboutModal({ visible, initial, onClose, onSave }) {
@@ -416,7 +454,7 @@ function CertModal({ visible, initial, onClose, onSave }) {
   };
 
   return (
-    <ModalWrapper visible={visible} onClose={onClose} title="Add Certification">
+    <ModalWrapper visible={visible} onClose={onClose} title="Certification">
       <FormInput label="Certification Name" required placeholder="e.g. AWS Certified Developer" value={form.name} onChangeText={set("name")} />
       <FormInput label="Issuing Organization" placeholder="e.g. Amazon Web Services" value={form.org} onChangeText={set("org")} />
       <View style={styles.formGroup}>
@@ -454,7 +492,10 @@ function SectionPill({ label, pct }) {
 export function ProfileScreen() {
   const { currentUser, profile, setProfile } = useAuth();
 
-  // State
+  // ── State ──
+
+  // ── State ──
+  const [profilePhoto, setProfilePhoto] = useState(profile?.profilePhoto || null);
   const [about, setAbout] = useState(profile?.about || "");
   const [skills, setSkills] = useState(profile?.skills || []);
   const [skillInput, setSkillInput] = useState("");
@@ -470,16 +511,89 @@ export function ProfileScreen() {
   const [showEmployment, setShowEmployment] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
   const [showCert, setShowCert] = useState(false);
+  const [showPhotoPicker, setShowPhotoPicker] = useState(false);
 
   // Edit state: null = adding, object = editing
   const [editingEmployment, setEditingEmployment] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
   const [editingCert, setEditingCert] = useState(null);
 
+  // ── Profile photo picker ──
+  const pickFromCamera = async () => {
+    setShowPhotoPicker(false);
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission needed", "Camera permission is required to take a photo.");
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setProfilePhoto(result.assets[0].uri);
+      }
+    } catch (e) {
+  console.log("CAMERA ERROR:", e);
+  Alert.alert("Error", String(e));
+}
+  };
+
+  const pickFromGallery = async () => {
+    setShowPhotoPicker(false);
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission needed", "Gallery permission is required to choose a photo.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setProfilePhoto(result.assets[0].uri);
+      }
+    } catch (e) {
+  console.log("GALLERY ERROR:", e);
+  Alert.alert("Error", String(e));
+}
+  };
+
+  const removePhoto = () => {
+    setShowPhotoPicker(false);
+    setProfilePhoto(null);
+  };
+
+  const openPhotoPicker = () => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ["Cancel", "Take Photo", "Choose from Gallery", "Remove Photo"],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: 3,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) pickFromCamera();
+          else if (buttonIndex === 2) pickFromGallery();
+          else if (buttonIndex === 3) removePhoto();
+        }
+      );
+    } else {
+      setShowPhotoPicker(true);
+    }
+  };
+
   // Sync local state back to AuthContext profile on change
   useEffect(() => {
     setProfile({
       ...profile,
+      profilePhoto,
       about,
       skills,
       employment,
@@ -487,7 +601,7 @@ export function ProfileScreen() {
       certifications,
       resumeName,
     });
-  }, [about, skills, employment, education, certifications, resumeName]);
+  }, [profilePhoto, about, skills, employment, education, certifications, resumeName]);
 
   // ── Completion Calc ──
   const sections = [
@@ -522,11 +636,9 @@ export function ProfileScreen() {
 
   const saveEmployment = (data) => {
     if (editingEmployment !== null) {
-      // Edit mode: update existing entry
       setEmployment(prev => prev.map((item, idx) => idx === editingEmployment ? data : item));
       setEditingEmployment(null);
     } else {
-      // Add mode: append new entry
       setEmployment(prev => [...prev, data]);
     }
   };
@@ -582,7 +694,7 @@ export function ProfileScreen() {
         ],
         copyToCacheDirectory: true,
         multiple: false,
-      });
+     });
 
       if (res?.canceled) return;
       if (res?.type === "cancel") return;
@@ -614,9 +726,18 @@ export function ProfileScreen() {
     >
       {/* ── HEADER ── */}
       <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initials}</Text>
-        </View>
+        <TouchableOpacity onPress={openPhotoPicker} style={styles.avatar}>
+          {profilePhoto ? (
+            <>
+              <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
+              <View style={styles.avatarBadge}>
+                <MaterialIcons name="camera-alt" size={12} color="#fff" />
+              </View>
+            </>
+          ) : (
+            <MaterialIcons name="camera-alt" size={24} color="#fff" />
+          )}
+        </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{displayName}</Text>
           <Text style={styles.sub}>Profile last updated - Today</Text>
@@ -802,6 +923,13 @@ export function ProfileScreen() {
       <View style={{ height: 40 }} />
 
       {/* ── MODALS ── */}
+      <PhotoPickerModal
+        visible={showPhotoPicker}
+        onClose={() => setShowPhotoPicker(false)}
+        onCamera={pickFromCamera}
+        onGallery={pickFromGallery}
+        onRemove={removePhoto}
+      />
       <AboutModal
         visible={showAbout}
         initial={about}
@@ -836,7 +964,7 @@ export function ProfileScreen() {
   );
 }
 
-// ─────────────────────────────────────────────
+// ──────── ─────────────────────────────────────
 // STYLES
 // ─────────────────────────────────────────────
 const styles = StyleSheet.create({
@@ -854,10 +982,27 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   avatar: {
-    width: 46, height: 46, borderRadius: 23,
+    width: 60, height: 60, borderRadius: 30,
     backgroundColor: COLORS.blue,
     alignItems: "center", justifyContent: "center",
-    marginRight: 12,
+    marginRight: 16,
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: 60, height: 60, borderRadius: 30,
+  },
+  avatarBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: COLORS.blue,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   avatarText: {
     color: "#fff",
@@ -873,9 +1018,9 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: "row", alignItems: "center", marginTop: 6, gap: 4 },
   infoText: { fontSize: 12, color: COLORS.sub },
   progressCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.blueLight,
@@ -883,6 +1028,50 @@ const styles = StyleSheet.create({
     borderColor: COLORS.blue,
   },
   percent: { fontSize: 16, fontWeight: "900", color: COLORS.blue },
+
+  // ── Photo Picker ──
+  photoPickerOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15,23,42,0.5)",
+    justifyContent: "flex-end",
+  },
+  photoPickerSheet: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  photoPickerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: COLORS.text,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  photoPickerOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    gap: 12,
+  },
+  photoPickerOptionText: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontWeight: "500",
+  },
+  photoPickerCancel: {
+    marginTop: 12,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: COLORS.bg,
+    alignItems: "center",
+  },
+  photoPickerCancelText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.sub,
+  },
 
   // ── Pills ──
   sectionHeading: { fontSize: 12, fontWeight: "600", color: COLORS.sub, letterSpacing: 0.8, textTransform: "uppercase", marginLeft: 16, marginBottom: 8 },
@@ -919,7 +1108,7 @@ const styles = StyleSheet.create({
   // ── Skills ──
   inputRow: { flexDirection: "row", gap: 8, marginTop: 12 },
   skillInput: { flex: 1, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14, color: COLORS.text },
-  addBtn: { backgroundColor: COLORS.blue, borderRadius: 10, width: 44, alignItems: "center", justifyContent: "center" },
+  addBtn: {backgroundColor: COLORS.blue, borderRadius: 10, width: 44, alignItems: "center", justifyContent: "center" },
   addBtnText: { color: "#fff", fontSize: 24, fontWeight: "300", lineHeight: 28 },
   skillsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
   skillTag: { flexDirection: "row", alignItems: "center", backgroundColor: COLORS.blueLight, borderRadius: 20, paddingVertical: 5, paddingHorizontal: 12, gap: 6 },
@@ -954,8 +1143,8 @@ const styles = StyleSheet.create({
     padding: 24, maxHeight: "90%",
     shadowColor: "#000", shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 20,
   },
-  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: COLORS.text },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  ModalTitle: { fontSize: 18, fontWeight: "700", color: COLORS.text }, // kept for reference but mapped to modalTitle
   modalClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.bg, alignItems: "center", justifyContent: "center" },
   modalFooter: {
     flexDirection: "row",

@@ -1,6 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import {
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,7 +18,14 @@ const menu = [
   { key: "settings", label: "Settings", icon: "settings" },
 ];
 
-export function SideDrawer({ activeKey, onNavigate, onLogout }) {
+export function SideDrawer({ activeKey, onNavigate, onLogout, userName, profilePhoto }) {
+  const displayName = userName || "User";
+  const initials = displayName
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join("");
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -28,11 +36,15 @@ export function SideDrawer({ activeKey, onNavigate, onLogout }) {
           onPress={() => onNavigate?.("profile")}
         >
           <View style={styles.avatar}>
-            <MaterialIcons name="person" size={22} color="#fff" />
+            {profilePhoto ? (
+              <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{initials}</Text>
+            )}
           </View>
 
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>Kummari</Text>
+            <Text style={styles.name}>{displayName}</Text>
             <Text style={styles.update}>Update profile</Text>
           </View>
 
@@ -92,6 +104,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+  },
+  avatarText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
 
   name: { fontSize: 17, fontWeight: "600", color: "#222" },
